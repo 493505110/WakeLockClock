@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:intl/find_locale.dart';
@@ -44,6 +45,8 @@ class _MainPageState extends State<MainPage> {
 
   var fontSize = 48.0;
   var timeFormat = "a hh:mm:ss";
+  var textColor = Colors.black;
+  var backgroundColor = Colors.white;
 
   var time = "";
 
@@ -72,6 +75,15 @@ class _MainPageState extends State<MainPage> {
       setState(() {
         fontSize = prefs.getDouble("fontSize") ?? 48.0;
         timeFormat = prefs.getString("timeFormat") ?? "a hh:mm:ss";
+        textColor = Color(
+          int.parse(prefs.getString("textColor") ?? "ff000000", radix: 16),
+        );
+        backgroundColor = Color(
+          int.parse(
+            prefs.getString("backgroundColor") ?? "ffffffff",
+            radix: 16,
+          ),
+        );
       });
     });
 
@@ -180,6 +192,93 @@ class _MainPageState extends State<MainPage> {
                             ),
                           ],
                         ),
+                        SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text("文字颜色/背景颜色"),
+                            SizedBox(width: 20),
+                            GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: Text("选择文字颜色"),
+                                      content: SingleChildScrollView(
+                                        child: ColorPicker(
+                                          enableAlpha: false,
+                                          hexInputBar: true,
+                                          pickerColor: textColor,
+                                          onColorChanged: (color) {
+                                            setState(() {
+                                              textColor = color;
+                                              prefs.then((prefs) {
+                                                prefs.setString(
+                                                  "textColor",
+                                                  textColor.toHexString(),
+                                                );
+                                              });
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              child: Container(
+                                padding: EdgeInsets.only(left: 1, right: 1),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: textColor),
+                                ),
+
+                                child: Text(
+                                  "#${textColor.toHexString().substring(0, 6)}",
+                                ),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: Text("选择背景颜色"),
+                                      content: SingleChildScrollView(
+                                        child: ColorPicker(
+                                          enableAlpha: false,
+                                          hexInputBar: true,
+                                          pickerColor: backgroundColor,
+                                          onColorChanged: (color) {
+                                            setState(() {
+                                              prefs.then((prefs) {
+                                                prefs.setString(
+                                                  "backgroundColor",
+                                                  backgroundColor.toHexString(),
+                                                );
+                                              });
+                                              backgroundColor = color;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                              child: Container(
+                                padding: EdgeInsets.only(left: 1, right: 1),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: backgroundColor),
+                                ),
+                                child: Text(
+                                  "#${backgroundColor.toHexString().substring(0, 6)}",
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                     actions: [
@@ -199,8 +298,14 @@ class _MainPageState extends State<MainPage> {
             },
           );
         },
-        child: Center(
-          child: Text(time, style: TextStyle(fontSize: fontSize)),
+        child: Container(
+          color: backgroundColor,
+          child: Center(
+            child: Text(
+              time,
+              style: TextStyle(fontSize: fontSize, color: textColor),
+            ),
+          ),
         ),
       ),
     );
